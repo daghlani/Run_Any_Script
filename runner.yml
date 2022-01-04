@@ -1,0 +1,16 @@
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: include python role
+      import_role:
+        name: roles/python
+      tags: [ never, python ]
+    - name: include bash role
+      import_role:
+        name: roles/bash
+      tags: [ never, bash ]
+    - name: run only if 'bash' or 'python' not specified
+      debug:
+        msg: "you must always defined one of tags 'bash' or 'python' like this ==> ansible-playbook --tags 'bash' --extra-vars 'TARGET_SCRIPT=sample.sh' -i hosts runner.yml "
+      when: "'bash' not in ansible_run_tags or 'python' not in ansible_run_tags"

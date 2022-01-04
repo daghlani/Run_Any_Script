@@ -1,0 +1,74 @@
+pipeline {
+    agent any
+
+    options {
+        disableConcurrentBuilds()
+        ansiColor("xterm")
+    }
+
+    parameters {
+        choice(  name: 'SCRIPT_TYPE',      choices: ['bash', 'python'] )
+        string(  name: 'PYTHON_INT', defaultValue: '', description: 'set python interpreter when your script is python' )
+        text  (  name: 'SCRIPT', defaultValue: '''# write your script here....\n\n\n\n''' )
+        text  (  name: 'HOSTS', defaultValue: '''[hosts]\n\n\n\n\n\n\n\n\n\n\n\n[hosts:vars]\n\nansible_user=root''' )
+    }
+    stages {
+        stage('Get run_script Repo') {
+            steps {
+                git ([
+                    url: 'https://github.com/daghlani/Run_Any_Script.git',
+                    branch: 'master',
+                    credentialsId: 'jenkins_git_user',
+                ])
+            }
+
+        }
+        stage('Bash Runner') {
+            when {
+                    expression { params.SCRIPT_TYPE == 'bash' }
+                }
+            steps {
+                sh '''
+                #!/bin/bash
+                echo "$SCRIPT" > script_file && cat script_file
+                mv script_file roles/$SCRIPT_TYPE/files/scripts/script_file
+                echo "$HOSTS" > hosts && cat hosts
+                '''
+                ansiblePlaybook (
+                    inventory: 'hosts',
+                    tags: '$SCRIPT_TYPE',
+                    playbook: 'runner.yml',
+                    extraVars: [
+                        TARGET_SCRIPT: 'script_file'
+                    ],
+                    disableHostKeyChecking: true,
+                    colorized: true,
+                )
+            }
+        }
+        stage('Python Runner') {
+            when {
+                    expression { params.SCRIPT_TYPE == 'python' }
+                }
+            steps {
+                sh '''
+                #!/bin/bash
+                echo "$SCRIPT" > script_file && cat script_file
+                mv script_file roles/$SCRIPT_TYPE/files/scripts/script_file
+                echo "$HOSTS" > hosts && cat hosts
+                '''
+                ansiblePlaybook (
+                    inventory: 'hosts',
+                    tags: '$SCRIPT_TYPE',
+                    playbook: 'runner.yml',
+                    extraVars: [
+                        TARGET_SCRIPT: 'script_file',
+                        PYTHON_INT: '$PYTHON_INT'
+                    ],
+                    disableHostKeyChecking: true,
+                    colorized: true,
+                )
+            }
+        }
+    }
+}

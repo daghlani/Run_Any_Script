@@ -1,0 +1,22 @@
+---
+- name: transfer script {{ TARGET_SCRIPT }}
+  copy:
+    src: files/scripts/{{ TARGET_SCRIPT }}
+    dest: /home/scripts/
+  tags: [script]
+
+- name: run script {{ TARGET_SCRIPT }}
+  command: "bash /home/scripts/{{ TARGET_SCRIPT }}"
+  register: script_output
+  tags: [run]
+
+- name: output of {{ TARGET_SCRIPT }}
+  debug: 
+    var: script_output.stdout_lines
+  tags: [output]
+
+- name: remove script {{ TARGET_SCRIPT }}
+  file:
+    path: /home/scripts/{{ TARGET_SCRIPT }}
+    state: absent
+  tags: [delete]
