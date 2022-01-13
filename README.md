@@ -1,4 +1,4 @@
-# Ansible Run Script
+# Ansible To Run Script
 
 This project is an ansible playbook to run any scripts (python or bash) on servers.
 
